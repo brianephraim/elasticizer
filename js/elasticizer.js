@@ -55,88 +55,6 @@
 		}
 
 
-		var setupClickToMove = function(options){
-			var $actor = options.$el;
-			var $actorWrap = $('<div class="actorWrap"></div>');
-			$actor.after($actorWrap);
-			$actorWrap.append($actor);
-			var actorWidth = $actor.width();
-			var actorHeight = $actor.height();
-			$('body').on('click',function(e){
-			    var actorOffset = $actor.offset();
-			    var cornerYDif = e.clientY - actorOffset.top;
-			    var clientToActorRatioY = (e.clientY-actorOffset.top)/actorHeight;
-			    var cornerXDif = e.clientX - actorOffset.left;
-			    var clientToActorRatioX = (e.clientX-actorOffset.left)/actorWidth;
-			    $actorWrap.css({
-			        'width':Math.abs(actorWidth * clientToActorRatioX)+'px',
-			        'height':Math.abs(actorHeight * clientToActorRatioY)+'px',
-			    });
-			    
-			    if(options.animationType === 'keyframe'){
-				    var cssObj = {};
-				    if(cornerXDif < 0 && cornerYDif < 0){
-				    	cssObj = options.animationPossibilities.negative_negative.cssRulesObject;
-				    }
-				    if(cornerXDif >= 0 && cornerYDif < 0){
-				    	cssObj = options.animationPossibilities.positive_negative.cssRulesObject;
-				    }
-				    if(cornerXDif >= 0 && cornerYDif >= 0){
-				    	cssObj = options.animationPossibilities.positive_positive.cssRulesObject;
-				    }
-				    if(cornerXDif < 0 && cornerYDif >= 0){
-				    	cssObj = options.animationPossibilities.negative_positive.cssRulesObject;
-				    }
-				    setTimeout(function(){
-				    	cssAnimationer({
-							target:$actorWrap,
-							cssObj:cssObj,
-							callback:function(){
-								$actorWrap.css({
-						            '-webkit-transform':'translate3d(0,0,0)',
-						            'top': e.clientY +'px',
-						            'left': e.clientX +'px',
-						            'width':'',
-						            'height':''
-						        })
-							}
-						});
-				    },0)
-			    } else {
-				    var oneHunderedX = 100;
-				    if(cornerXDif < 0){
-				    	oneHunderedX = -100;
-				    }
-				    var oneHunderedY = 100;
-				    if(cornerYDif < 0){
-				    	oneHunderedY = -100;
-				    }
-				    var transformValue = 'translate3d('+oneHunderedX+'%,'+oneHunderedY+'%,0)'
-				    setTimeout(function(){
-				        cssTransitioner({
-							target: $actorWrap,
-							cssProperty: '-webkit-transform',
-							cssValue: transformValue,
-							duration: 500,
-							ease: 'linear',
-							callback: function($that){
-								console.log('CALLBSACK')
-								$actorWrap.css({
-						            '-webkit-transform':'translate3d(0,0,0)',
-						            'top': e.clientY +'px',
-						            'left': e.clientX +'px',
-						            'width':'',
-						            'height':''
-						        })
-							}
-						});
-				    },0)
-			    }
-			    
-			})
-		};
-
-
 		var makeKeyframeCSSRule = function(){
 			var translateValue = 'translate3d(100%,-100%,0)';
 			var possibilities = {
@@ -184,19 +102,93 @@
 
 		//ACTUAL CLASS THAT IS CALLED IN OTHER MODULES
 		var elasticizer = function(options){
-			function easingAlg(t, b, c, d){
-				var ts=(t/=d)*t;
-				var tc=ts*t;
-				return b+c*(4*tc + -3*ts);
-			}
-			for(var i = 0, l=101; i<l; i++){
-			    var inc = i/100
-			    $('body').append('<p>'+(easingAlg(inc*1,0,1,1)*100)+'</p>')
-			}
 			options.animationPossibilities = makeKeyframeCSSRule();
-			setupClickToMove(options);	
+			this.$actor = options.$el;
+			this.settings = options;
+			this.initialize();	
+        };
+
+        elasticizer.prototype.initialize = function(){
+        	var self = this;
+        	if(typeof self.$actorWrap === 'undefined'){
+        		self.$actorWrap = $('<div class="actorWrap" style="position:absolute;"></div>');
+				self.$actor.after(self.$actorWrap);
+        	}
+			self.$actorWrap.append(self.$actor);
+			
 			
         };
+        elasticizer.prototype.moveTo = function(xValue,yValue){
+        	var self = this;
+        	var relativeParentOffset = self.settings.$relativeParent.offset();
+			var actorWidth = self.$actor.width();
+			var actorHeight = self.$actor.height();
+		    var actorOffset = self.$actor.offset();
+		    var cornerYDif = yValue - actorOffset.top;
+		    var clientToActorRatioY = (yValue-actorOffset.top)/actorHeight;
+		    var cornerXDif = xValue - actorOffset.left;
+		    var clientToActorRatioX = (xValue-actorOffset.left)/actorWidth;
+		    self.$actorWrap.css({
+		        'width':Math.abs(actorWidth * clientToActorRatioX)+'px',
+		        'height':Math.abs(actorHeight * clientToActorRatioY)+'px',
+		    });
+		    
+		    if(self.settings.animationType === 'keyframe'){
+			    var cssObj = {};
+			    if(cornerXDif < 0 && cornerYDif < 0){
+			    	cssObj = self.settings.animationPossibilities.negative_negative.cssRulesObject;
+			    }
+			    if(cornerXDif >= 0 && cornerYDif < 0){
+			    	cssObj = self.settings.animationPossibilities.positive_negative.cssRulesObject;
+			    }
+			    if(cornerXDif >= 0 && cornerYDif >= 0){
+			    	cssObj = self.settings.animationPossibilities.positive_positive.cssRulesObject;
+			    }
+			    if(cornerXDif < 0 && cornerYDif >= 0){
+			    	cssObj = self.settings.animationPossibilities.negative_positive.cssRulesObject;
+			    }
+		    	cssAnimationer({
+					target:self.$actorWrap,
+					cssObj:cssObj,
+					callback:function(){
+						self.$actorWrap.css({
+				            '-webkit-transform':'translate3d(0,0,0)',
+				            'top': (yValue - relativeParentOffset.top) +'px',
+				            'left': (xValue - relativeParentOffset.left) +'px',
+				            'width':'',
+				            'height':''
+				        })
+					}
+				});
+		    } else {
+			    var oneHunderedX = 100;
+			    if(cornerXDif < 0){
+			    	oneHunderedX = -100;
+			    }
+			    var oneHunderedY = 100;
+			    if(cornerYDif < 0){
+			    	oneHunderedY = -100;
+			    }
+			    var transformValue = 'translate3d('+oneHunderedX+'%,'+oneHunderedY+'%,0)'
+		        cssTransitioner({
+					target: self.$actorWrap,
+					cssProperty: '-webkit-transform',
+					cssValue: transformValue,
+					duration: 500,
+					ease: 'linear',
+					callback: function($that){
+						console.log('CALLBSACK')
+						self.$actorWrap.css({
+				            '-webkit-transform':'translate3d(0,0,0)',
+				            'top': (yValue - relativeParentOffset.top) +'px',
+				            'left': (xValue - relativeParentOffset.left) +'px',
+				            'width':'',
+				            'height':''
+				        })
+					}
+				});
+		    }
+        }
 
 		return elasticizer;
 	}

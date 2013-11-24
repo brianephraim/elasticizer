@@ -14,11 +14,17 @@
 	//EXPECTS <whatev class="catSlides"></whatev> in the DOM
 	var app = function($,elasticizer){
 		$(function(){
-    		$('.elasticizerWidgetFrame').append('asdfasfasdfasdfasdfa');
+			var $actor = $('<div class="elasticizerActor"></div>');
+    		$('.elasticizerWidgetFrame').append($actor);
     		var myElasticizer= new elasticizer({
-    			$el:$('.actor'),
-    			animationType:'keyframe'//transition
+    			$el:$('.elasticizerActor'),
+    			$relativeParent:$('.elasticizerWidgetFrame'),
+    			animationType:'keyframe'//transition,keyframe
     		});
+    		$('.elasticizerWidgetFrame').on('click',function(e){
+    			console.log(e)
+				myElasticizer.moveTo(e.pageX,e.pageY)
+			})
 		});
 		return 'Hi i am return app';
 	};
